@@ -89,7 +89,8 @@ def filter_meaningful_words(words, min_length=4):
         'customer', 'user', 'player', 'people', 'group', 'company', 'business',
         'market', 'product', 'service', 'content', 'data', 'information', 'knowledge',
         'experience', 'quality', 'value', 'cost', 'price', 'rate', 'score', 'number',
-        'amount', 'size', 'scale', 'range', 'list', 'set', 'group', 'class', 'type'
+        'amount', 'size', 'scale', 'range', 'list', 'set', 'group', 'class', 'type',
+        'copy','definitely','probably','maybe','actually','really','literally','basically','seriously'
     }
     
     filtered = []
@@ -200,7 +201,7 @@ def create_word_cloud(text_series, question_title):
 
 # Load data
 st.title("📊 Survey Analysis Dashboard")
-st.markdown("Comprehensive analysis of EA workshop attendee survey responses with visualizations and key insights")
+st.markdown("Comprehensive analysis of EA workshop attendee survey responses with visualizations and key insights. For internal Account team usage only.")
 
 try:
     df = pd.read_csv('survey_data.csv', index_col=0, encoding='latin-1')
@@ -335,9 +336,9 @@ for question_num in range(1, 13):
         with col2:
             create_word_cloud(responses, question_text)
         
-        # Show sample responses
-        with st.expander("View Sample Responses"):
-            for idx, response in enumerate(responses.head(3), 1):
+        # Show all responses
+        with st.expander(f"View All {len(responses)} Responses"):
+            for idx, response in enumerate(responses, 1):
                 st.write(f"**Response {idx}:**")
                 st.write(response)
                 st.divider()

@@ -126,14 +126,21 @@ def create_word_frequency_chart(text_series, question_title):
         combined_freq = sorted(combined_freq, key=lambda x: x[1], reverse=True)[:15]
         items, counts = zip(*combined_freq)
         
-        # Color code: blue for single words, green for phrases
-        colors = ['steelblue' if ' ' not in item else 'seagreen' for item in items]
+        # Create blue color gradient based on frequency values
+        # Normalize counts to 0-1 range for color mapping
+        min_count = min(counts)
+        max_count = max(counts)
+        normalized_counts = [(c - min_count) / (max_count - min_count) if max_count > min_count else 0.5 for c in counts]
+        
+        # Map to blue color scale: light blue (low) to dark blue (high)
+        # RGB values: light blue (100, 150, 255) to dark blue (0, 51, 153)
+        colors = [f'rgba({int(100 - 100*norm)}, {int(150 - 99*norm)}, {int(255 - 102*norm)}, 0.8)' for norm in normalized_counts]
         
         fig = go.Figure(data=[
             go.Bar(x=counts, y=items, orientation='h', marker_color=colors)
         ])
         fig.update_layout(
-            title=f"Top Words & Phrases - {question_title}",
+            title="Top Words & Phrases in Responses",
             xaxis_title="Frequency",
             yaxis_title="Words/Phrases",
             height=500,
@@ -142,7 +149,7 @@ def create_word_frequency_chart(text_series, question_title):
         st.plotly_chart(fig, width='stretch')
         
         # Add legend explanation
-        st.caption("🔵 Single words | 🟢 Phrases (2-3 words)")
+        st.caption("🔵 Light blue = Lower frequency | Dark blue = Higher frequency")
 
 def create_word_cloud(text_series, question_title):
     """Create a word cloud from text responses including phrases"""
@@ -173,7 +180,7 @@ def create_word_cloud(text_series, question_title):
     
     try:
         wordcloud = WordCloud(width=800, height=400, background_color='white', 
-                             colormap='viridis', max_words=50, 
+                             colormap='viridis', max_words=66, 
                              collocations=False).generate(cloud_text)
         
         fig, ax = plt.subplots(figsize=(12, 5))
@@ -218,49 +225,49 @@ with col3:
 
 st.divider()
 
-# Define survey questions (columns I through T)
+# Define survey questions (columns I through T, displayed as questions 1-12)
 # Excel columns: I=8, J=9, K=10, L=11, M=12, N=13, O=14, P=15, Q=16, R=17, S=18, T=19
 question_columns = {
-    'I': 'What is your role today, and how do you currently interact with player support, player-facing knowledge, or content as part of your work?',
-    'J': 'Vision for AI Concierge: Which player moments are most important for AI Concierge to support?',
-    'K': 'Experience Expectations: What does a high-quality vs low-quality AI Concierge experience look like?',
-    'L': 'Risks: What risks or concerns come to mind with an AI-driven player experience?',
-    'M': 'Success Metrics: What would success look like for AI Concierge?',
-    'N': 'Fan Care vs. IT vs. Game Studios Roles: How do you see these teams contributing?',
-    'O': 'Knowledge Sources - Internal: What knowledge sets support the AI Concierge?',
-    'P': 'Third Party Content: How do you feel about using third-party content?',
-    'Q': 'AI Readiness: On a scale of 1-10, how ready is existing knowledge?',
-    'R': 'AI Readiness Explanation: Why did you select that number?',
-    'S': 'Responsible AI: What safety or review measures are in place?',
-    'T': 'Gaps & Dependencies: What are the biggest gaps or blockers?'
+    1: 'What is your role today, and how do you currently interact with player support, player-facing knowledge, or content as part of your work?',
+    2: 'Vision for AI Concierge: Which player moments are most important for AI Concierge to support?',
+    3: 'Experience Expectations: What does a high-quality vs low-quality AI Concierge experience look like?',
+    4: 'Risks: What risks or concerns come to mind with an AI-driven player experience?',
+    5: 'Success Metrics: What would success look like for AI Concierge?',
+    6: 'Fan Care vs. IT vs. Game Studios Roles: How do you see these teams contributing?',
+    7: 'Knowledge Sources - Internal: What knowledge sets support the AI Concierge?',
+    8: 'Third Party Content: How do you feel about using third-party content?',
+    9: 'AI Readiness: On a scale of 1-10, how ready is existing knowledge?',
+    10: 'AI Readiness Explanation: Why did you select that number?',
+    11: 'Responsible AI: What safety or review measures are in place?',
+    12: 'Gaps & Dependencies: What are the biggest gaps or blockers?'
 }
 
 # Get the actual column names
 actual_columns = df.columns.tolist()
 
-# Map question letters to actual column indices
+# Map question numbers to actual column indices
 col_mapping = {}
-for i, letter in enumerate(['I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T']):
+for i, number in enumerate(range(1, 13)):
     # Columns start at index 7 for column I (0-indexed)
     if 7 + i < len(actual_columns):
-        col_mapping[letter] = actual_columns[7 + i]
+        col_mapping[number] = actual_columns[7 + i]
 
 st.header("Survey Questions & Analysis")
 
 # Create tabs for each question
 with st.expander("📋 View All Questions", expanded=False):
-    for letter, question in question_columns.items():
-        st.write(f"**{letter}. {question}**")
+    for number, question in question_columns.items():
+        st.write(f"**Question {number}. {question}**")
 
 # Analyze each question
-for letter in ['I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T']:
-    if letter not in col_mapping:
+for question_num in range(1, 13):
+    if question_num not in col_mapping:
         continue
     
-    col_name = col_mapping[letter]
-    question_text = question_columns[letter]
+    col_name = col_mapping[question_num]
+    question_text = question_columns[question_num]
     
-    st.header(f"Question {letter}: {question_text}")
+    st.header(f"Question {question_num}: {question_text}")
     
     # Get responses
     responses = df[col_name].dropna()
@@ -269,8 +276,8 @@ for letter in ['I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T']:
         st.warning("No responses for this question")
         continue
     
-    # Special handling for numerical question (Q)
-    if letter == 'Q':
+    # Special handling for numerical question (Question 9)
+    if question_num == 9:
         try:
             # Try to convert to numeric
             numeric_responses = pd.to_numeric(responses, errors='coerce').dropna()
@@ -293,7 +300,7 @@ for letter in ['I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T']:
                 with col1:
                     # Bar chart of distribution
                     fig = go.Figure(data=[
-                        go.Histogram(x=numeric_responses, nbinsx=10, marker_color='indianred')
+                        go.Histogram(x=numeric_responses, nbinsx=10, marker_color='rgba(25, 118, 210, 0.8)')
                     ])
                     fig.update_layout(
                         title="Distribution of Responses",
